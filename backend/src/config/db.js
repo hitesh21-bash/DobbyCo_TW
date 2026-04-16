@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const createAdminUser = require('../utils/createAdmin');
 
 const connectDB = async () => {
   try {
@@ -8,12 +7,7 @@ const connectDB = async () => {
       useUnifiedTopology: true,
     });
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-    
-    // Create admin user after database connection
-    await createAdminUser();
-    
     console.log(`📋 DobbyCo Database is ready!`);
-    
   } catch (error) {
     console.error(`❌ Error: ${error.message}`);
     process.exit(1);
