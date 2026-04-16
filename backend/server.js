@@ -18,12 +18,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // CORS middleware - allow your Vercel frontend
-app.use(
-  cors({
-    origin: ['http://localhost:5173', 'https://dobbyco-tw.vercel.app', 'https://*.vercel.app'],
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://dobbyco-tw.vercel.app',
+    'https://dobbyco-tw.vercel.app/',
+    'https://*.vercel.app'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // API Routes
 app.use('/api/auth', require('./src/routes/authRoutes'));
