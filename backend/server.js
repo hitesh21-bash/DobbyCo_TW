@@ -1,5 +1,4 @@
 const express = require('express');
-const path = require('path');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -18,10 +17,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// CORS middleware (allow both local and production)
+// CORS middleware - allow your Vercel frontend
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'http://localhost:3000', 'https://*.onrender.com'],
+    origin: ['http://localhost:5173', 'https://dobbyco-tw.vercel.app', 'https://*.vercel.app'],
     credentials: true,
   })
 );
@@ -41,14 +40,27 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ===== SERVE FRONTEND STATIC FILES =====
-// This is the key addition for single-platform deployment
-const frontendPath = path.join(__dirname, '../frontend/dist');
-app.use(express.static(frontendPath));
+// Root route - API info
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'DobbyCo API is running!',
+    endpoints: {
+      health: '/api/health',
+      services: '/api/services',
+      auth: '/api/auth',
+      bookings: '/api/bookings',
+      users: '/api/users'
+    }
+  });
+});
 
-// All non-API routes go to React app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
+// 404 handler for API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `API endpoint ${req.originalUrl} not found`
+  });
 });
 
 // Error handling middleware
@@ -61,7 +73,7 @@ const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📦 Environment: ${process.env.NODE_ENV}`);
   console.log(`🛢️  MongoDB: Connected to DobbyCo database`);
-  console.log(`🎨 Frontend serving from: ${frontendPath}`);
+  console.log(`🔗 API available at: http://localhost:${PORT}/api`);
 });
 
 // Handle unhandled promise rejections
