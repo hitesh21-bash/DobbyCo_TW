@@ -1,17 +1,23 @@
 services:
   - type: web
-    name: dobbyco-backend
-    env: node
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && node server.js
+    name: dobbyco-app
+    runtime: node
+    repo: https://github.com/hitesh21-bash/DobbyCo_TW
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm run start
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 5000
       - key: MONGODB_URI
-        sync: false
+        value: mongodb+srv://hitesh212006_db_user:cItVgSa7sIzzrT2J@dobbyco.e7f7tnf.mongodb.net/dobbyco?retryWrites=true&w=majority
       - key: JWT_SECRET
-        sync: false
+        value: dobbyco_super_secret_key_change_this_in_production_2024
+      - key: JWT_EXPIRE
+        value: 30d
       - key: ADMIN_EMAIL
         value: admin@dobbyco.com
       - key: ADMIN_PASSWORD
-        sync: false
+        value: Admin123!
