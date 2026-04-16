@@ -1,4 +1,0 @@
-"scripts": {
-  "build": "cd backend && npm install && cd ../frontend && npm install --include=dev && npm run build",
-  "start": "cd backend && node server.js"
-}
