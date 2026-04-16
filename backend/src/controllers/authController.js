@@ -6,7 +6,7 @@ const { generateToken, setTokenCookie } = require('../utils/generateToken');
 // @access  Public
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, role, businessName, businessLicense } = req.body;
 
     // Check if user exists
     const userExists = await User.findOne({ email });
@@ -17,13 +17,22 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Create user
-    const user = await User.create({
+    // Create user object based on role
+    const userData = {
       name,
       email,
       password,
-      phone
-    });
+      phone,
+      role: role || 'user'
+    };
+
+    // Add business info for service providers
+    if (role === 'service_provider' || role === 'breeder' || role === 'trainer' || role === 'veterinarian') {
+      userData.businessName = businessName || '';
+      userData.businessLicense = businessLicense || '';
+    }
+
+    const user = await User.create(userData);
 
     if (user) {
       const token = generateToken(user._id, user.role);
@@ -37,6 +46,8 @@ const registerUser = async (req, res) => {
           email: user.email,
           phone: user.phone,
           role: user.role,
+          businessName: user.businessName,
+          isVerified: user.isVerified,
           token
         }
       });
@@ -92,6 +103,8 @@ const loginUser = async (req, res) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        businessName: user.businessName,
+        isVerified: user.isVerified,
         token
       }
     });
@@ -137,9 +150,40 @@ const getMe = async (req, res) => {
   }
 };
 
+// @desc    Update user role (Admin only)
+// @route   PUT /api/auth/role/:id
+// @access  Private/Admin
+const updateUserRole = async (req, res) => {
+  try {
+    const { role } = req.body;
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    user.role = role;
+    await user.save();
+    
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
-  getMe
+  getMe,
+  updateUserRole
 };

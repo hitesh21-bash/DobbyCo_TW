@@ -15,31 +15,38 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('token'));
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-  // Set axios default header
-  if (token) {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  }
+  // Get token from localStorage
+  const getToken = () => localStorage.getItem('token');
 
+  // Set axios default header
   useEffect(() => {
+    const token = getToken();
     if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       loadUser();
     } else {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   const loadUser = async () => {
     try {
-      const response = await axios.get(`${API_URL}/auth/me`);
+      const token = getToken();
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      
+      const response = await axios.get(`${API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setUser(response.data.data);
     } catch (error) {
       console.error('Error loading user:', error);
       localStorage.removeItem('token');
-      setToken(null);
       delete axios.defaults.headers.common['Authorization'];
     } finally {
       setLoading(false);
@@ -52,7 +59,7 @@ export const AuthProvider = ({ children }) => {
       const { token, data } = response.data;
       
       localStorage.setItem('token', token);
-      setToken(token);
+      localStorage.setItem('user', JSON.stringify(data));
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(data);
       
@@ -65,22 +72,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signup = async (name, email, password, phone) => {
+  const signup = async (name, email, password, phone, role = 'user', businessName = '', businessLicense = '') => {
     try {
       const response = await axios.post(`${API_URL}/auth/register`, {
         name,
         email,
         password,
-        phone
+        phone,
+        role,
+        businessName,
+        businessLicense
       });
       const { token, data } = response.data;
       
       localStorage.setItem('token', token);
-      setToken(token);
+      localStorage.setItem('user', JSON.stringify(data));
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(data);
       
-      toast.success('Account created successfully! Welcome to DobbyCo! 🐾');
+      const roleMessages = {
+        user: 'Welcome to DobbyCo! 🐾',
+        service_provider: 'Welcome! Your service provider account is pending verification 🏪',
+        breeder: 'Welcome breeder! Start listing your pets 🐕',
+        trainer: 'Welcome trainer! Start offering your services 🎓',
+        veterinarian: 'Welcome doctor! Your expertise is valuable 🏥'
+      };
+      
+      toast.success(roleMessages[role] || 'Account created successfully!');
       return { success: true, user: data };
     } catch (error) {
       const message = error.response?.data?.message || 'Signup failed';
@@ -97,7 +115,7 @@ export const AuthProvider = ({ children }) => {
     }
     
     localStorage.removeItem('token');
-    setToken(null);
+    localStorage.removeItem('user');
     setUser(null);
     delete axios.defaults.headers.common['Authorization'];
     toast.success('Logged out successfully');

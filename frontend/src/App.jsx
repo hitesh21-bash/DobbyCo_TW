@@ -11,8 +11,18 @@ import DashboardPage from './pages/DashboardPage';
 import AdminPage from './pages/AdminPage';
 import Login from './components/auth/Login';
 import Signup from './components/auth/Signup';
-import PrivateRoute from './components/common/PrivateRoute';
-import AdminRoute from './components/common/AdminRoute';
+
+// Simple wrapper for protected routes
+const PrivateRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  return token ? children : <Navigate to="/login" />;
+};
+
+const AdminRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  return token && user.role === 'admin' ? children : <Navigate to="/" />;
+};
 
 function App() {
   return (
@@ -45,30 +55,7 @@ function App() {
             </Routes>
           </main>
           <Footer />
-          <Toaster 
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-              success: {
-                duration: 3000,
-                iconTheme: {
-                  primary: '#10B981',
-                  secondary: '#fff',
-                },
-              },
-              error: {
-                duration: 4000,
-                iconTheme: {
-                  primary: '#EF4444',
-                  secondary: '#fff',
-                },
-              },
-            }}
-          />
+          <Toaster position="top-right" />
         </div>
       </AuthProvider>
     </Router>

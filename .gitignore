@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Environment files (CRITICAL - don't push secrets!)
+.env
+.env.local
+.env.production
+.env.development
+
+# Backend specific
+backend/node_modules/
+backend/.env
+
+# Frontend specific
+frontend/node_modules/
+frontend/.env
+frontend/dist/
+frontend/dist-ssr/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# MongoDB
+dump/

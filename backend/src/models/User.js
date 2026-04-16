@@ -1,6 +1,42 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const petSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  type: {
+    type: String,
+    enum: ['dog', 'cat', 'bird', 'rabbit', 'hamster', 'other'],
+    required: true
+  },
+  breed: {
+    type: String,
+    default: ''
+  },
+  age: {
+    type: Number,
+    default: null
+  },
+  weight: {
+    type: Number,
+    default: null
+  },
+  medicalConditions: {
+    type: String,
+    default: ''
+  }
+});
+
+const addressSchema = new mongoose.Schema({
+  street: String,
+  city: String,
+  state: String,
+  zipCode: String,
+  country: String
+});
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -26,28 +62,32 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin'],
+    enum: ['user', 'admin', 'service_provider', 'breeder', 'trainer', 'veterinarian'],
     default: 'user'
   },
   phone: {
     type: String,
-    maxlength: [20, 'Phone number cannot be more than 20 characters']
+    maxlength: [20, 'Phone number cannot be more than 20 characters'],
+    default: ''
   },
   address: {
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String,
-    country: String
+    type: addressSchema,
+    default: {}
   },
-  pets: [{
-    name: String,
+  pets: [petSchema],
+  // Additional fields for service providers
+  businessName: {
     type: String,
-    breed: String,
-    age: Number,
-    weight: Number,
-    medicalConditions: String
-  }],
+    default: ''
+  },
+  businessLicense: {
+    type: String,
+    default: ''
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now
