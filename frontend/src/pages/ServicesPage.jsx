@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaPaw, FaClock, FaMoneyBillWave, FaStar, FaFilter, FaTimes } from 'react-icons/fa';
-import axios from 'axios';
+import { FaClock, FaMoneyBillWave, FaFilter, FaTimes } from 'react-icons/fa';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 
 const ServicesPage = () => {
@@ -29,10 +29,10 @@ const ServicesPage = () => {
     try {
       setLoading(true);
       const url = selectedCategory === 'all' 
-        ? 'http://localhost:5000/api/services'
-        : `http://localhost:5000/api/services?category=${selectedCategory}`;
+        ? '/services'
+        : `/services?category=${selectedCategory}`;
       
-      const response = await axios.get(url);
+      const response = await api.get(url);
       setServices(response.data.data);
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -54,10 +54,10 @@ const ServicesPage = () => {
     return icons[category] || '🐾';
   };
 
+  // Rest of your component remains the same...
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="container mx-auto px-4">
-        {/* Header */}
         <div className="text-center mb-12 animate-fade-in">
           <h1 className="text-5xl font-bold text-gray-800 mb-4">
             Our <span className="text-primary-600">Services</span>
@@ -128,8 +128,8 @@ const ServicesPage = () => {
           </div>
         ) : services.length === 0 ? (
           <div className="text-center py-16">
-            <FaPaw className="text-6xl text-gray-300 mx-auto mb-4" />
-            <p className="text-xl text-gray-500">No services found in this category</p>
+            <span className="text-6xl">🐾</span>
+            <p className="text-xl text-gray-500 mt-4">No services found in this category</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -183,15 +183,6 @@ const ServicesPage = () => {
                       <span className="text-red-600 text-sm font-semibold">Unavailable</span>
                     )}
                   </div>
-                  {service.features && service.features.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {service.features.slice(0, 3).map((feature, idx) => (
-                        <span key={idx} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                          {feature}
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             ))}

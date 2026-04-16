@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { FaUser, FaCalendarAlt, FaPaw, FaEdit, FaHeart, FaClock, FaCheckCircle, FaTimesCircle, FaSpinner, FaBriefcase, FaChartLine, FaUsers, FaDollarSign } from 'react-icons/fa';
-import axios from 'axios';
+import { FaUser, FaCalendarAlt, FaPaw, FaHeart, FaCheckCircle, FaTimesCircle, FaSpinner, FaBriefcase, FaChartLine, FaUsers, FaDollarSign } from 'react-icons/fa';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 import MyBookings from '../components/dashboard/MyBookings';
 import Profile from '../components/dashboard/Profile';
@@ -32,11 +32,7 @@ const DashboardPage = () => {
 
   const fetchBookingStats = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/bookings/my-bookings', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
+      const response = await api.get('/bookings/my-bookings');
       const bookings = response.data.data;
       const completed = bookings.filter(b => b.status === 'completed').length;
       const pending = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed').length;
@@ -272,10 +268,7 @@ const PetsComponent = () => {
 
   const fetchPets = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/users/pets', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/users/pets');
       setPets(response.data.data);
     } catch (error) {
       console.error('Error fetching pets:', error);
@@ -287,10 +280,7 @@ const PetsComponent = () => {
   const handleAddPet = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/users/pets', formData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.post('/users/pets', formData);
       toast.success('Pet added successfully!');
       setShowAddForm(false);
       setFormData({

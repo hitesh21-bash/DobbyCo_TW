@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
@@ -16,16 +16,13 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
   // Get token from localStorage
   const getToken = () => localStorage.getItem('token');
 
-  // Set axios default header
+  // Load user on mount
   useEffect(() => {
     const token = getToken();
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       loadUser();
     } else {
       setLoading(false);
@@ -34,20 +31,12 @@ export const AuthProvider = ({ children }) => {
 
   const loadUser = async () => {
     try {
-      const token = getToken();
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-      
-      const response = await axios.get(`${API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/auth/me');
       setUser(response.data.data);
     } catch (error) {
       console.error('Error loading user:', error);
       localStorage.removeItem('token');
-      delete axios.defaults.headers.common['Authorization'];
+      localStorage.removeItem('user');
     } finally {
       setLoading(false);
     }
@@ -55,12 +44,11 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, { email, password });
+      const response = await api.post('/auth/login', { email, password });
       const { token, data } = response.data;
       
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(data));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(data);
       
       toast.success('Login successful! Welcome back! 🎉');
@@ -74,7 +62,7 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (name, email, password, phone, role = 'user', businessName = '', businessLicense = '') => {
     try {
-      const response = await axios.post(`${API_URL}/auth/register`, {
+      const response = await api.post('/auth/register', {
         name,
         email,
         password,
@@ -87,7 +75,6 @@ export const AuthProvider = ({ children }) => {
       
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(data));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(data);
       
       const roleMessages = {
@@ -109,7 +96,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axios.post(`${API_URL}/auth/logout`);
+      await api.post('/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -117,7 +104,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
-    delete axios.defaults.headers.common['Authorization'];
     toast.success('Logged out successfully');
   };
 

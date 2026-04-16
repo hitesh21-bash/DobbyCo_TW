@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaPaw, FaCalendarAlt, FaClock, FaPaw as FaPet, FaInfoCircle, FaCreditCard, FaCheckCircle } from 'react-icons/fa';
-import axios from 'axios';
+import { FaPaw, FaCalendarAlt, FaClock, FaInfoCircle, FaCreditCard } from 'react-icons/fa';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
@@ -32,7 +32,7 @@ const BookingPage = () => {
 
   const fetchServiceDetails = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/services/${serviceId}`);
+      const response = await api.get(`/services/${serviceId}`);
       setService(response.data.data);
     } catch (error) {
       console.error('Error fetching service:', error);
@@ -69,21 +69,14 @@ const BookingPage = () => {
     setSubmitting(true);
     
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        'http://localhost:5000/api/bookings',
-        {
-          serviceId: service._id,
-          petName: formData.petName,
-          petType: formData.petType,
-          bookingDate: formData.bookingDate,
-          timeSlot: formData.timeSlot,
-          specialInstructions: formData.specialInstructions
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      const response = await api.post('/bookings', {
+        serviceId: service._id,
+        petName: formData.petName,
+        petType: formData.petType,
+        bookingDate: formData.bookingDate,
+        timeSlot: formData.timeSlot,
+        specialInstructions: formData.specialInstructions
+      });
       
       setBookingData(response.data.data);
       setShowPaymentModal(true);
@@ -98,17 +91,10 @@ const BookingPage = () => {
 
   const handleMockPayment = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `http://localhost:5000/api/bookings/${bookingData._id}/payment`,
-        {
-          paymentStatus: 'paid',
-          paymentMethod: 'mock'
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      await api.put(`/bookings/${bookingData._id}/payment`, {
+        paymentStatus: 'paid',
+        paymentMethod: 'mock'
+      });
       
       toast.success('Payment successful! 🎉 Your booking is confirmed!');
       setShowPaymentModal(false);
@@ -119,6 +105,7 @@ const BookingPage = () => {
     }
   };
 
+  // Rest of the component JSX remains the same...
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -127,9 +114,7 @@ const BookingPage = () => {
     );
   }
 
-  if (!service) {
-    return null;
-  }
+  if (!service) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-12">
@@ -152,120 +137,38 @@ const BookingPage = () => {
                 </h2>
                 
                 <form onSubmit={handleSubmit} className="space-y-5">
-                  {/* Pet Name */}
                   <div>
-                    <label className="block text-gray-700 font-semibold mb-2">
-                      Pet Name *
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FaPet className="text-gray-400" />
-                      </div>
-                      <input
-                        type="text"
-                        name="petName"
-                        value={formData.petName}
-                        onChange={handleChange}
-                        required
-                        className="input-field pl-10"
-                        placeholder="e.g., Max, Luna, Charlie"
-                      />
-                    </div>
+                    <label className="block text-gray-700 font-semibold mb-2">Pet Name *</label>
+                    <input type="text" name="petName" value={formData.petName} onChange={handleChange} required className="input-field" placeholder="e.g., Max, Luna" />
                   </div>
 
-                  {/* Pet Type */}
                   <div>
-                    <label className="block text-gray-700 font-semibold mb-2">
-                      Pet Type *
-                    </label>
-                    <select
-                      name="petType"
-                      value={formData.petType}
-                      onChange={handleChange}
-                      required
-                      className="input-field"
-                    >
-                      {petTypes.map(type => (
-                        <option key={type} value={type}>
-                          {type.charAt(0).toUpperCase() + type.slice(1)}
-                        </option>
-                      ))}
+                    <label className="block text-gray-700 font-semibold mb-2">Pet Type *</label>
+                    <select name="petType" value={formData.petType} onChange={handleChange} required className="input-field">
+                      {petTypes.map(type => (<option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>))}
                     </select>
                   </div>
 
-                  {/* Booking Date */}
                   <div>
-                    <label className="block text-gray-700 font-semibold mb-2">
-                      Booking Date *
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FaCalendarAlt className="text-gray-400" />
-                      </div>
-                      <input
-                        type="date"
-                        name="bookingDate"
-                        value={formData.bookingDate}
-                        onChange={handleChange}
-                        required
-                        min={new Date().toISOString().split('T')[0]}
-                        className="input-field pl-10"
-                      />
-                    </div>
+                    <label className="block text-gray-700 font-semibold mb-2">Booking Date *</label>
+                    <input type="date" name="bookingDate" value={formData.bookingDate} onChange={handleChange} required min={new Date().toISOString().split('T')[0]} className="input-field" />
                   </div>
 
-                  {/* Time Slot */}
                   <div>
-                    <label className="block text-gray-700 font-semibold mb-2">
-                      Time Slot *
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FaClock className="text-gray-400" />
-                      </div>
-                      <select
-                        name="timeSlot"
-                        value={formData.timeSlot}
-                        onChange={handleChange}
-                        required
-                        className="input-field pl-10"
-                      >
-                        <option value="">Select a time slot</option>
-                        {timeSlots.map(slot => (
-                          <option key={slot} value={slot}>{slot}</option>
-                        ))}
-                      </select>
-                    </div>
+                    <label className="block text-gray-700 font-semibold mb-2">Time Slot *</label>
+                    <select name="timeSlot" value={formData.timeSlot} onChange={handleChange} required className="input-field">
+                      <option value="">Select a time slot</option>
+                      {timeSlots.map(slot => (<option key={slot} value={slot}>{slot}</option>))}
+                    </select>
                   </div>
 
-                  {/* Special Instructions */}
                   <div>
-                    <label className="block text-gray-700 font-semibold mb-2">
-                      Special Instructions
-                    </label>
-                    <textarea
-                      name="specialInstructions"
-                      value={formData.specialInstructions}
-                      onChange={handleChange}
-                      rows="3"
-                      className="input-field"
-                      placeholder="Any special requirements or notes about your pet..."
-                    ></textarea>
+                    <label className="block text-gray-700 font-semibold mb-2">Special Instructions</label>
+                    <textarea name="specialInstructions" value={formData.specialInstructions} onChange={handleChange} rows="3" className="input-field" placeholder="Any special requirements..."></textarea>
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full btn-primary"
-                  >
-                    {submitting ? (
-                      <div className="flex items-center justify-center space-x-2">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        <span>Processing...</span>
-                      </div>
-                    ) : (
-                      'Proceed to Payment'
-                    )}
+                  <button type="submit" disabled={submitting} className="w-full btn-primary">
+                    {submitting ? 'Processing...' : 'Proceed to Payment'}
                   </button>
                 </form>
               </div>
@@ -273,36 +176,16 @@ const BookingPage = () => {
 
             {/* Service Summary */}
             <div>
-              <div className="bg-gradient-to-br from-primary-600 to-secondary-600 text-white rounded-2xl shadow-xl p-6 sticky top-24 animate-fade-in">
+              <div className="bg-gradient-to-br from-primary-600 to-secondary-600 text-white rounded-2xl shadow-xl p-6 sticky top-24">
                 <h3 className="text-xl font-bold mb-4">Service Summary</h3>
                 <div className="space-y-4">
-                  <div>
-                    <p className="text-white/80 text-sm">Service</p>
-                    <p className="font-semibold text-lg">{service.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-white/80 text-sm">Category</p>
-                    <p className="font-semibold capitalize">{service.category}</p>
-                  </div>
-                  <div>
-                    <p className="text-white/80 text-sm">Duration</p>
-                    <p className="font-semibold">{service.duration}</p>
-                  </div>
-                  <div>
-                    <p className="text-white/80 text-sm">Price</p>
-                    <p className="text-3xl font-bold">${service.price}</p>
-                  </div>
-                  <div className="border-t border-white/20 pt-4">
-                    <p className="text-white/80 text-sm">Total Amount</p>
-                    <p className="text-4xl font-bold mt-1">${service.price}</p>
-                  </div>
+                  <div><p className="text-white/80 text-sm">Service</p><p className="font-semibold text-lg">{service.name}</p></div>
+                  <div><p className="text-white/80 text-sm">Category</p><p className="font-semibold capitalize">{service.category}</p></div>
+                  <div><p className="text-white/80 text-sm">Duration</p><p className="font-semibold">{service.duration}</p></div>
+                  <div><p className="text-white/80 text-sm">Price</p><p className="text-3xl font-bold">${service.price}</p></div>
+                  <div className="border-t border-white/20 pt-4"><p className="text-white/80 text-sm">Total Amount</p><p className="text-4xl font-bold mt-1">${service.price}</p></div>
                 </div>
-                <div className="mt-6 p-4 bg-white/10 rounded-lg">
-                  <div className="flex items-start space-x-2">
-                    <FaInfoCircle className="mt-0.5" />
-                    <p className="text-sm">Free cancellation up to 24 hours before appointment</p>
-                  </div>
-                </div>
+                <div className="mt-6 p-4 bg-white/10 rounded-lg"><div className="flex items-start space-x-2"><FaInfoCircle className="mt-0.5" /><p className="text-sm">Free cancellation up to 24 hours before appointment</p></div></div>
               </div>
             </div>
           </div>
@@ -311,37 +194,16 @@ const BookingPage = () => {
 
       {/* Payment Modal */}
       {showPaymentModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-8 animate-slide-up">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowPaymentModal(false)}>
+          <div className="bg-white rounded-2xl max-w-md w-full p-8" onClick={(e) => e.stopPropagation()}>
             <div className="text-center">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaCreditCard className="text-4xl text-green-600" />
-              </div>
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><FaCreditCard className="text-4xl text-green-600" /></div>
               <h3 className="text-2xl font-bold mb-2">Complete Payment</h3>
-              <p className="text-gray-600 mb-6">
-                Total Amount: <span className="font-bold text-2xl text-primary-600">${service?.price}</span>
-              </p>
-              
-              {/* Mock Payment Demo */}
-              <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-                <p className="text-sm text-gray-600 mb-2 font-semibold">💳 Demo Payment</p>
-                <p className="text-xs text-gray-500">This is a mock payment for demonstration purposes.</p>
-                <p className="text-xs text-gray-500 mt-1">Click "Pay Now" to confirm your booking.</p>
-              </div>
-              
+              <p className="text-gray-600 mb-6">Total Amount: <span className="font-bold text-2xl text-primary-600">${service?.price}</span></p>
+              <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left"><p className="text-sm text-gray-600 mb-2 font-semibold">💳 Demo Payment</p><p className="text-xs text-gray-500">Click "Pay Now" to confirm your booking.</p></div>
               <div className="flex gap-4">
-                <button
-                  onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleMockPayment}
-                  className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all"
-                >
-                  Pay ${service?.price}
-                </button>
+                <button onClick={() => setShowPaymentModal(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                <button onClick={handleMockPayment} className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg">Pay ${service?.price}</button>
               </div>
             </div>
           </div>

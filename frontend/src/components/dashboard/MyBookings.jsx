@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaCalendarAlt, FaClock, FaMoneyBillWave, FaEye, FaTimes, FaCheckCircle, FaSpinner } from 'react-icons/fa';
-import axios from 'axios';
+import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 const MyBookings = () => {
@@ -15,10 +15,7 @@ const MyBookings = () => {
 
   const fetchBookings = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/bookings/my-bookings', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/bookings/my-bookings');
       setBookings(response.data.data);
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -32,10 +29,7 @@ const MyBookings = () => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) return;
     
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/bookings/${bookingId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/bookings/${bookingId}`);
       toast.success('Booking cancelled successfully');
       fetchBookings();
     } catch (error) {
@@ -113,8 +107,7 @@ const MyBookings = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 mt-2">
                   <div className="flex items-center space-x-2">
-                    <FaPawIcon className="text-primary-500" />
-                    <span>Pet: <strong>{booking.petName}</strong> ({booking.petType})</span>
+                    <span>🐾 Pet: <strong>{booking.petName}</strong> ({booking.petType})</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <FaCalendarAlt className="text-primary-500" />
@@ -214,12 +207,5 @@ const MyBookings = () => {
     </div>
   );
 };
-
-// Helper component for Paw icon
-const FaPawIcon = ({ className }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 24 24" width="14" height="14">
-    <path d="M12 4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-  </svg>
-);
 
 export default MyBookings;
